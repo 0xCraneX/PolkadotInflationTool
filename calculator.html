@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polkadot Inflation Reduction Calculator</title>
+    <link rel="stylesheet" href="calculator-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Polkadot Inflation Reduction Calculator</h1>
+            <p class="subtitle">Model DOT issuance reduction scenarios and their impact on token economics</p>
+        </header>
+
+        <section class="model-selection">
+            <div class="model-radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="model" value="fixed" id="modelFixed" checked>
+                    <span>Model 1: Fixed Step Reduction</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="model" value="target" id="modelTarget">
+                    <span>Model 2: Target Supply Model</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="parameters">
+            <!-- Model 1 Parameters -->
+            <div id="model1Params" class="model-params">
+                <div class="parameter-group">
+                    <label for="reductionStep">
+                        Reduction Step: <span id="reductionStepValue">50</span>%
+                        <small>How much issuance decreases each period</small>
+                    </label>
+                    <input type="range" id="reductionStep" min="1" max="99" value="50" step="1">
+                </div>
+
+                <div class="parameter-group">
+                    <label for="inflationPeriod">
+                        Inflation Period: <span id="inflationPeriodValue">2</span> years
+                        <small>How often the reduction occurs</small>
+                    </label>
+                    <input type="range" id="inflationPeriod" min="1" max="10" value="2" step="1">
+                </div>
+            </div>
+
+            <!-- Model 2 Parameters -->
+            <div id="model2Params" class="model-params" style="display: none;">
+                <div class="parameter-group">
+                    <label for="targetSupply">
+                        Target Max Supply (DOT)
+                        <small>Enter target maximum supply in DOT</small>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="targetSupply" 
+                               value="3.14" 
+                               class="number-input"
+                               placeholder="e.g., 3.14">
+                        <span class="input-unit">Billion DOT</span>
+                    </div>
+                    <div class="input-error" id="targetSupplyError" style="display: none;">
+                        Target must be greater than supply after 2025 (1.57B DOT)
+                    </div>
+                </div>
+
+                <div class="parameter-group">
+                    <label for="reductionRate">
+                        Reduction Rate: <span id="reductionRateValue">25</span>%
+                        <small>Percentage of remaining inflation per period</small>
+                    </label>
+                    <input type="range" id="reductionRate" min="1" max="50" value="25" step="1">
+                </div>
+
+                <div class="parameter-group">
+                    <label for="targetPeriod">
+                        Period: <span id="targetPeriodValue">2</span> years
+                        <small>Duration for each reduction period</small>
+                    </label>
+                    <input type="range" id="targetPeriod" min="1" max="10" value="2" step="1">
+                </div>
+            </div>
+
+            <button id="resetButton" class="reset-btn">Reset to Defaults</button>
+        </section>
+
+        <section class="summary">
+            <div class="summary-card">
+                <h3>Current Parameters</h3>
+                <div id="model1Summary">
+                    <p>Step: <span id="summaryStep">50</span>%</p>
+                    <p>Period: <span id="summaryPeriod">2</span> years</p>
+                </div>
+                <div id="model2Summary" style="display: none;">
+                    <p>Target: <span id="summaryTarget">3.14</span>B DOT</p>
+                    <p>Rate: <span id="summaryRate">25</span>%</p>
+                    <p>Period: <span id="summaryTargetPeriod">2</span> years</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <h3>Key Metrics</h3>
+                <p>2025 Inflation: <span id="currentInflation">-</span>%</p>
+                <p>10yr Inflation: <span id="tenYearInflation">-</span>%</p>
+            </div>
+            <div class="summary-card">
+                <h3>Supply Difference by 2052</h3>
+                <p><span id="supplyDifference">-</span> DOT</p>
+                <p>vs. Fixed 120M/year</p>
+            </div>
+        </section>
+
+        <section class="chart-section">
+            <div class="chart-controls">
+                <label>
+                    <input type="checkbox" id="showMCLines" unchecked>
+                    Show Market Cap Lines (USD)
+                </label>
+                <label>
+                    <input type="checkbox" id="showStakingRate" unchecked>
+                    Show Staking Rewards Rate (assuming 50% staked)
+                </label>
+                <label>
+                    <input type="checkbox" id="logScale" unchecked>
+                    Logarithmic Scale
+                </label>
+            </div>
+            <div class="chart-container">
+                <canvas id="inflationChart"></canvas>
+            </div>
+        </section>
+
+        <section class="data-section">
+            <h2>Detailed Calculations</h2>
+            <div class="table-actions">
+                <button id="exportCSV" class="export-btn">Export to CSV</button>
+            </div>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Yearly Issuance (DOT)</th>
+                            <th>Total Supply (DOT)</th>
+                            <th>Yearly Treasury Income (DOT)</th>
+                            <th>Yearly Stakers Income (DOT)</th>
+                            <th>MC Needed to Sustain (USD)</th>
+                            <th>MC Needed to $90M (USD)</th>
+                            <th>Step %</th>
+                            <th>Inflation Period</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="calculator.js" type="module"></script>
+</body>
+</html>

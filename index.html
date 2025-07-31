@@ -3,795 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polkadot Economics Data</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <title>Polkadot Economics Tools</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: #f5f5f5;
             color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1000px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 40px 20px;
+            text-align: center;
         }
         h1 {
-            margin: 0 0 10px 0;
             color: #E6007A;
+            margin-bottom: 10px;
+            font-size: 48px;
         }
         .subtitle {
             color: #666;
-            margin-bottom: 30px;
-        }
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-        .stat {
-            text-align: center;
-            flex: 1;
-            min-width: 200px;
-            margin: 10px;
-            padding: 20px;
-            background: #f8f8f8;
-            border-radius: 8px;
-        }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #E6007A;
-        }
-        .stat-value.small {
+            margin-bottom: 60px;
             font-size: 20px;
         }
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 0 auto;
+            max-width: 800px;
         }
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-bottom: 50px;
-        }
-        .chart-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 40px;
-            font-size: 14px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background: #f8f8f8;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-        }
-        th:hover {
-            background: #eee;
-        }
-        tbody tr:hover {
-            background: #f8f8f8;
-        }
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 18px;
-            color: #666;
-        }
-        .table-wrapper {
-            max-height: 500px;
-            overflow-y: auto;
-            margin-top: 40px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .table-wrapper table {
-            margin-top: 0;
-        }
-        .table-wrapper thead {
-            position: sticky;
-            top: 0;
+        .tool-card {
             background: white;
-            z-index: 10;
+            border-radius: 12px;
+            padding: 40px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        .tool-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .tool-title {
+            font-size: 24px;
+            color: #E6007A;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        .footer {
+            margin-top: 80px;
+            color: #999;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #E6007A;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Polkadot Economics Data</h1>
-        <div class="subtitle">August 19, 2020 - July 30, 2025</div>
+        <h1>Polkadot Economics Tools</h1>
+        <p class="subtitle">Comprehensive analytics and modeling for Polkadot network economics</p>
         
-        <div class="loading" id="loading">Loading data...</div>
+        <div class="tools-grid">
+            <a href="dashboard.html" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <div class="tool-title">Inflation Dashboard</div>
+                <div class="tool-description">
+                    Analyze historical data, treasury spending, validator rewards, and network economics from Aug 2020 to present
+                </div>
+            </a>
+            
+            <a href="calculator.html" class="tool-card">
+                <div class="tool-icon">🧮</div>
+                <div class="tool-title">Inflation Calculator</div>
+                <div class="tool-description">
+                    Model future DOT issuance reduction scenarios and their impact on token economics
+                </div>
+            </a>
+        </div>
         
-        <div id="content" style="display: none;">
-            <div class="stats-row" id="stats"></div>
-            
-            <div class="chart-title">DOT Price & Governance Spending</div>
-            <div class="chart-container">
-                <canvas id="priceSpendingChart"></canvas>
-            </div>
-            
-            <div class="chart-title">Total Issuance Growth</div>
-            <div class="chart-container">
-                <canvas id="issuanceChart"></canvas>
-            </div>
-            
-            <div class="chart-title">Validator & Nominator Rewards (USD)</div>
-            <div class="chart-container">
-                <canvas id="rewardsChart"></canvas>
-            </div>
-            
-            <div class="chart-title">Governance Spending: DOT vs Stablecoins (Monthly)</div>
-            <div class="chart-container">
-                <canvas id="spendingBreakdownChart"></canvas>
-            </div>
-            
-            <div class="chart-title">Monthly Distribution: Validator/Nominator Rewards & Governance Spending</div>
-            <div class="chart-container">
-                <canvas id="monthlyDistributionChart"></canvas>
-            </div>
-            
-            <div class="chart-title">Monthly Distribution (Normalized to 100%)</div>
-            <div class="chart-container">
-                <canvas id="monthlyDistributionNormalizedChart"></canvas>
-            </div>
-            
-            <div class="chart-title" style="margin-top: 40px;">Treasury Revenue Metrics</div>
-            <div class="stats-row">
-                <div class="stat">
-                    <div class="stat-label">Additional Treasury Revenue</div>
-                    <div class="stat-value">1,002,940 DOT</div>
-                    <div class="stat-label" style="font-size: 12px; margin-top: 20px;">Revenue Sources:</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Hydration 1M DOT Lending</div>
-                    <div class="stat-value">19,100 DOT</div>
-                    <div class="stat-label" style="margin-top: 5px; font-size: 11px; color: #999;">Earned</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Bifrost Lend</div>
-                    <div class="stat-value">35,000 DOT</div>
-                    <div class="stat-label" style="margin-top: 5px; font-size: 11px; color: #999;">Earned</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">aDOT Money Market</div>
-                    <div class="stat-value">170,000 DOT</div>
-                    <div class="stat-label" style="margin-top: 5px; font-size: 11px; color: #999;">Annualized</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">Network Fees</div>
-                    <div class="stat-value">778,840 DOT</div>
-                    <div class="stat-label" style="margin-top: 5px; font-size: 11px; color: #999;">Total Collected</div>
-                </div>
-            </div>
-            
-            <div class="table-wrapper">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(0)">Date</th>
-                            <th onclick="sortTable(1)">Price</th>
-                            <th onclick="sortTable(2)">Issuance</th>
-                            <th onclick="sortTable(3)">Governance DOT</th>
-                            <th onclick="sortTable(4)">Governance USD</th>
-                            <th onclick="sortTable(5)">Stables Spent</th>
-                            <th onclick="sortTable(6)">Validator Rewards</th>
-                            <th onclick="sortTable(7)">Nominator Rewards</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
+        <div class="footer">
+            Built by <a href="https://github.com/0xCraneX" target="_blank">0xCraneX</a> for the Polkadot community
         </div>
     </div>
-
-    <script>
-        let globalData = [];
-        let sortColumn = -1;
-        let sortAscending = true;
-
-        // Format numbers with thousands separators and no decimals
-        function formatNumber(num) {
-            return Math.round(num).toLocaleString('en-US');
-        }
-
-        // Load and parse CSV
-        Papa.parse('dot_usd_max.csv', {
-            download: true,
-            header: true,
-            dynamicTyping: true,
-            complete: function(results) {
-                globalData = results.data.filter(row => row.Date); // Filter out empty rows
-                processData(globalData);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-            },
-            error: function(error) {
-                document.getElementById('loading').innerHTML = 'Error loading data: ' + error;
-            }
-        });
-
-        function processData(data) {
-            // Calculate stats
-            const stats = calculateStats(data);
-            displayStats(stats);
-            
-            // Create charts
-            createPriceSpendingChart(data);
-            createIssuanceChart(data);
-            createRewardsChart(data);
-            createSpendingBreakdownChart(data);
-            createMonthlyDistributionChart(data);
-            createMonthlyDistributionNormalizedChart(data);
-            
-            // Populate table
-            populateTable(data);
-        }
-
-        function calculateStats(data) {
-            const latestData = data[data.length - 1];
-            const totalGovDOT = data.reduce((sum, row) => sum + (row.OpengovSpend || 0), 0);
-            const totalGovStables = data.reduce((sum, row) => sum + (row['Opengov stables spend'] || 0), 0);
-            const totalInflationUSD = data.reduce((sum, row) => sum + (row['Dollar value infflation'] || 0), 0);
-            const totalGovDOTUSD = data.reduce((sum, row) => sum + (row['USD Value'] || 0), 0);
-            
-            return {
-                currentSupply: (latestData.issuance / 1e9).toFixed(2) + 'B',
-                govSpent: (totalGovDOT / 1e6).toFixed(1) + 'M DOT + ' + (totalGovStables / 1e6).toFixed(1) + 'M USDC/T',
-                dotSpentUSD: '$' + (totalGovDOTUSD / 1e6).toFixed(1) + 'M',
-                totalInflation: '$' + (totalInflationUSD / 1e9).toFixed(1) + 'B'
-            };
-        }
-
-        function displayStats(stats) {
-            const statsHtml = `
-                <div class="stat">
-                    <div class="stat-value">${stats.currentSupply}</div>
-                    <div class="stat-label">Total DOT Supply</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value small">${stats.govSpent}</div>
-                    <div class="stat-label">Total Governance Spent</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${stats.dotSpentUSD}</div>
-                    <div class="stat-label">USD Value of DOT Spent</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${stats.totalInflation}</div>
-                    <div class="stat-label">Total Inflation Distributed</div>
-                </div>
-            `;
-            document.getElementById('stats').innerHTML = statsHtml;
-        }
-
-        function createPriceSpendingChart(data) {
-            const ctx = document.getElementById('priceSpendingChart').getContext('2d');
-            
-            // Aggregate spending by month for better visualization
-            const monthlyData = aggregateByMonth(data);
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyData.labels,
-                    datasets: [{
-                        type: 'line',
-                        label: 'DOT Price (USD)',
-                        data: monthlyData.prices,
-                        borderColor: '#E6007A',
-                        backgroundColor: 'transparent',
-                        yAxisID: 'y',
-                        tension: 0.1,
-                        pointRadius: 0,
-                        borderWidth: 2
-                    }, {
-                        type: 'bar',
-                        label: 'Governance DOT Spending (USD)',
-                        data: monthlyData.dotSpendingUSD,
-                        backgroundColor: 'rgba(230, 0, 122, 0.5)',
-                        yAxisID: 'y1'
-                    }, {
-                        type: 'bar',
-                        label: 'Governance Stables Spending',
-                        data: monthlyData.stablesSpending,
-                        backgroundColor: 'rgba(0, 122, 230, 0.5)',
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'DOT Price (USD)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Governance Spending (USD)'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createIssuanceChart(data) {
-            const ctx = document.getElementById('issuanceChart').getContext('2d');
-            
-            // Sample data for performance (every 7th day)
-            const sampledData = data.filter((_, index) => index % 7 === 0);
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sampledData.map(row => row.Date),
-                    datasets: [{
-                        label: 'Total Issuance',
-                        data: sampledData.map(row => row.issuance),
-                        borderColor: '#E6007A',
-                        backgroundColor: 'rgba(230, 0, 122, 0.1)',
-                        tension: 0.1,
-                        pointRadius: 0,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Total DOT Issuance'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return (value / 1e9).toFixed(2) + 'B';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Issuance: ' + (context.parsed.y / 1e9).toFixed(3) + 'B DOT';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createRewardsChart(data) {
-            const ctx = document.getElementById('rewardsChart').getContext('2d');
-            
-            // Aggregate by month
-            const monthlyData = aggregateByMonth(data);
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: monthlyData.labels,
-                    datasets: [{
-                        label: 'Validator Rewards',
-                        data: monthlyData.validatorRewards,
-                        borderColor: '#E6007A',
-                        backgroundColor: 'rgba(230, 0, 122, 0.3)',
-                        fill: true
-                    }, {
-                        label: 'Nominator Rewards',
-                        data: monthlyData.nominatorRewards,
-                        borderColor: '#007AE6',
-                        backgroundColor: 'rgba(0, 122, 230, 0.3)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            title: {
-                                display: true,
-                                text: 'Monthly Rewards (USD)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + (value / 1e6).toFixed(1) + 'M';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createSpendingBreakdownChart(data) {
-            const ctx = document.getElementById('spendingBreakdownChart').getContext('2d');
-            
-            // Aggregate by month for visualization
-            const monthlySpendData = aggregateByMonth(data);
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: monthlySpendData.labels,
-                    datasets: [{
-                        label: 'DOT Spending (USD)',
-                        data: monthlySpendData.dotSpendingUSD,
-                        backgroundColor: '#E6007A'
-                    }, {
-                        label: 'Stablecoin Spending',
-                        data: monthlySpendData.stablesSpending,
-                        backgroundColor: '#007AE6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            title: {
-                                display: true,
-                                text: 'Monthly Governance Spending'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    if (value >= 1e6) {
-                                        return (value / 1e6).toFixed(0) + 'M';
-                                    }
-                                    return (value / 1e3).toFixed(0) + 'K';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label;
-                                    const value = context.parsed.y;
-                                    return label + ': $' + formatNumber(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function aggregateByMonth(data) {
-            const months = {};
-            
-            data.forEach(row => {
-                const date = new Date(row.Date);
-                const monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-                
-                if (!months[monthKey]) {
-                    months[monthKey] = {
-                        prices: [],
-                        dotSpending: 0,
-                        dotSpendingUSD: 0,
-                        stablesSpending: 0,
-                        validatorRewards: 0,
-                        nominatorRewards: 0,
-                        count: 0
-                    };
-                }
-                
-                months[monthKey].prices.push(row.Price || 0);
-                months[monthKey].dotSpending += row.OpengovSpend || 0;
-                months[monthKey].dotSpendingUSD += row['USD Value'] || 0;
-                months[monthKey].stablesSpending += row['Opengov stables spend'] || 0;
-                months[monthKey].validatorRewards += row['Dollar Value Validators'] || 0;
-                months[monthKey].nominatorRewards += row['Dollar Value Nominators'] || 0;
-                months[monthKey].count++;
-            });
-            
-            const sortedMonths = Object.keys(months).sort();
-            
-            return {
-                labels: sortedMonths,
-                prices: sortedMonths.map(m => months[m].prices.reduce((a, b) => a + b, 0) / months[m].prices.length),
-                dotSpending: sortedMonths.map(m => months[m].dotSpending),
-                dotSpendingUSD: sortedMonths.map(m => months[m].dotSpendingUSD),
-                stablesSpending: sortedMonths.map(m => months[m].stablesSpending),
-                validatorRewards: sortedMonths.map(m => months[m].validatorRewards),
-                nominatorRewards: sortedMonths.map(m => months[m].nominatorRewards)
-            };
-        }
-
-        function createMonthlyDistributionChart(data) {
-            const ctx = document.getElementById('monthlyDistributionChart').getContext('2d');
-            
-            // Aggregate by month
-            const monthlyData = aggregateByMonth(data);
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyData.labels,
-                    datasets: [{
-                        label: 'Validator Rewards',
-                        data: monthlyData.validatorRewards,
-                        backgroundColor: '#FF6B6B'
-                    }, {
-                        label: 'Nominator Rewards',
-                        data: monthlyData.nominatorRewards,
-                        backgroundColor: '#4ECDC4'
-                    }, {
-                        label: 'Governance DOT (USD)',
-                        data: monthlyData.dotSpendingUSD,
-                        backgroundColor: '#E6007A'
-                    }, {
-                        label: 'Governance Stables',
-                        data: monthlyData.stablesSpending,
-                        backgroundColor: '#007AE6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            title: {
-                                display: true,
-                                text: 'Monthly USD Value'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    if (value >= 1e6) {
-                                        return '$' + (value / 1e6).toFixed(1) + 'M';
-                                    }
-                                    return '$' + (value / 1e3).toFixed(0) + 'K';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label;
-                                    const value = context.parsed.y;
-                                    return label + ': $' + formatNumber(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createMonthlyDistributionNormalizedChart(data) {
-            const ctx = document.getElementById('monthlyDistributionNormalizedChart').getContext('2d');
-            
-            // Aggregate by month
-            const monthlyData = aggregateByMonth(data);
-            
-            // Normalize data to percentages
-            const normalizedData = {
-                labels: monthlyData.labels,
-                validatorRewards: [],
-                nominatorRewards: [],
-                dotSpendingUSD: [],
-                stablesSpending: []
-            };
-            
-            for (let i = 0; i < monthlyData.labels.length; i++) {
-                const total = (monthlyData.validatorRewards[i] || 0) + 
-                             (monthlyData.nominatorRewards[i] || 0) + 
-                             (monthlyData.dotSpendingUSD[i] || 0) + 
-                             (monthlyData.stablesSpending[i] || 0);
-                
-                if (total > 0) {
-                    normalizedData.validatorRewards.push((monthlyData.validatorRewards[i] / total) * 100);
-                    normalizedData.nominatorRewards.push((monthlyData.nominatorRewards[i] / total) * 100);
-                    normalizedData.dotSpendingUSD.push((monthlyData.dotSpendingUSD[i] / total) * 100);
-                    normalizedData.stablesSpending.push((monthlyData.stablesSpending[i] / total) * 100);
-                } else {
-                    normalizedData.validatorRewards.push(0);
-                    normalizedData.nominatorRewards.push(0);
-                    normalizedData.dotSpendingUSD.push(0);
-                    normalizedData.stablesSpending.push(0);
-                }
-            }
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: normalizedData.labels,
-                    datasets: [{
-                        label: 'Validator Rewards',
-                        data: normalizedData.validatorRewards,
-                        backgroundColor: '#FF6B6B'
-                    }, {
-                        label: 'Nominator Rewards',
-                        data: normalizedData.nominatorRewards,
-                        backgroundColor: '#4ECDC4'
-                    }, {
-                        label: 'Governance DOT (USD)',
-                        data: normalizedData.dotSpendingUSD,
-                        backgroundColor: '#E6007A'
-                    }, {
-                        label: 'Governance Stables',
-                        data: normalizedData.stablesSpending,
-                        backgroundColor: '#007AE6'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            min: 0,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Percentage of Monthly Distribution'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label;
-                                    const value = context.parsed.y;
-                                    const dataIndex = context.dataIndex;
-                                    
-                                    // Get the actual USD value from the original data
-                                    let actualValue = 0;
-                                    if (label === 'Validator Rewards') {
-                                        actualValue = monthlyData.validatorRewards[dataIndex];
-                                    } else if (label === 'Nominator Rewards') {
-                                        actualValue = monthlyData.nominatorRewards[dataIndex];
-                                    } else if (label === 'Governance DOT (USD)') {
-                                        actualValue = monthlyData.dotSpendingUSD[dataIndex];
-                                    } else if (label === 'Governance Stables') {
-                                        actualValue = monthlyData.stablesSpending[dataIndex];
-                                    }
-                                    
-                                    return label + ': ' + value.toFixed(1) + '% ($' + formatNumber(actualValue) + ')';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function populateTable(data) {
-            const tbody = document.getElementById('tableBody');
-            const displayData = data.slice().reverse(); // Show all entries, newest first
-            
-            displayData.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.Date}</td>
-                    <td>$${row.Price.toFixed(2)}</td>
-                    <td>${(row.issuance / 1e9).toFixed(3)}B</td>
-                    <td>${formatNumber(row.OpengovSpend || 0)}</td>
-                    <td>$${formatNumber(row['USD Value'] || 0)}</td>
-                    <td>$${formatNumber(row['Opengov stables spend'] || 0)}</td>
-                    <td>$${formatNumber(row['Dollar Value Validators'] || 0)}</td>
-                    <td>$${formatNumber(row['Dollar Value Nominators'] || 0)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function sortTable(columnIndex) {
-            const table = document.getElementById('dataTable');
-            const tbody = table.tBodies[0];
-            const rows = Array.from(tbody.rows);
-            
-            if (sortColumn === columnIndex) {
-                sortAscending = !sortAscending;
-            } else {
-                sortColumn = columnIndex;
-                sortAscending = true;
-            }
-            
-            rows.sort((a, b) => {
-                const aVal = a.cells[columnIndex].textContent.replace(/[$,B]/g, '');
-                const bVal = b.cells[columnIndex].textContent.replace(/[$,B]/g, '');
-                
-                if (columnIndex === 0) { // Date column
-                    return sortAscending ? 
-                        new Date(aVal) - new Date(bVal) : 
-                        new Date(bVal) - new Date(aVal);
-                } else { // Numeric columns
-                    return sortAscending ? 
-                        parseFloat(aVal) - parseFloat(bVal) : 
-                        parseFloat(bVal) - parseFloat(aVal);
-                }
-            });
-            
-            tbody.innerHTML = '';
-            rows.forEach(row => tbody.appendChild(row));
-        }
-    </script>
 </body>
 </html>
