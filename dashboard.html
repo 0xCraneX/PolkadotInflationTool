@@ -249,7 +249,7 @@
                 document.getElementById('toggleDotPrice').addEventListener('click', function() {
                     dotPriceVisible = !dotPriceVisible;
                     liquidationsChart.data.datasets[0].hidden = !dotPriceVisible;
-                    liquidationsChart.options.scales.y.display = dotPriceVisible;
+                    liquidationsChart.options.scales.y1.display = dotPriceVisible;
                     liquidationsChart.update();
                     this.textContent = dotPriceVisible ? 'Hide DOT Price' : 'Show DOT Price';
                 });
@@ -837,7 +837,7 @@
                         data: chartData.prices,
                         borderColor: '#E6007A',
                         backgroundColor: 'transparent',
-                        yAxisID: 'y',
+                        yAxisID: 'y1',
                         tension: 0.1,
                         borderWidth: 3,
                         pointRadius: 4
@@ -846,21 +846,21 @@
                         label: 'Validator Liquidations (USD)',
                         data: chartData.validatorLiquidationsUSD,
                         backgroundColor: 'rgba(255, 107, 107, 0.7)',
-                        yAxisID: 'y1',
+                        yAxisID: 'y',
                         stack: 'spending'
                     }, {
                         type: 'bar',
                         label: 'Nominator Liquidations (USD)',
                         data: chartData.nominatorLiquidationsUSD,
                         backgroundColor: 'rgba(78, 205, 196, 0.7)',
-                        yAxisID: 'y1',
+                        yAxisID: 'y',
                         stack: 'spending'
                     }, {
                         type: 'bar',
                         label: 'Treasury Spending (USD)',
                         data: chartData.treasurySpendingUSD,
                         backgroundColor: 'rgba(255, 215, 0, 0.7)',
-                        yAxisID: 'y1',
+                        yAxisID: 'y',
                         stack: 'spending'
                     }]
                 },
@@ -879,27 +879,10 @@
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: {
-                                display: true,
-                                text: 'DOT Price (USD)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toFixed(2);
-                                }
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
                             stacked: true,
                             title: {
                                 display: true,
                                 text: 'Monthly USD Value'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
                             },
                             ticks: {
                                 callback: function(value) {
@@ -907,6 +890,23 @@
                                         return '$' + (value / 1e6).toFixed(1) + 'M';
                                     }
                                     return '$' + (value / 1e3).toFixed(0) + 'K';
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'DOT Price (USD)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
                                 }
                             }
                         }
