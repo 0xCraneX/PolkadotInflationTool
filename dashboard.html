@@ -138,7 +138,10 @@
                 <canvas id="rewardsChart"></canvas>
             </div>
             
-            <div class="chart-title">Staking Reward Liquidations vs DOT Price</div>
+            <div class="chart-title">
+                Staking Liquidations & Treasury Spending vs DOT Price
+                <button id="toggleDotPrice" style="float: right; font-size: 12px; padding: 4px 8px; margin-left: 10px; background: #E6007A; color: white; border: none; border-radius: 4px; cursor: pointer;">Hide DOT Price</button>
+            </div>
             <div class="chart-container">
                 <canvas id="liquidationsChart"></canvas>
             </div>
@@ -223,6 +226,8 @@
         let globalData = [];
         let sortColumn = -1;
         let sortAscending = true;
+        let liquidationsChart = null;
+        let dotPriceVisible = true;
 
         // Format numbers with thousands separators and no decimals
         function formatNumber(num) {
@@ -239,6 +244,15 @@
                 processData(globalData);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
+                
+                // Add event listener for DOT price toggle
+                document.getElementById('toggleDotPrice').addEventListener('click', function() {
+                    dotPriceVisible = !dotPriceVisible;
+                    liquidationsChart.data.datasets[0].hidden = !dotPriceVisible;
+                    liquidationsChart.options.scales.y.display = dotPriceVisible;
+                    liquidationsChart.update();
+                    this.textContent = dotPriceVisible ? 'Hide DOT Price' : 'Show DOT Price';
+                });
             },
             error: function(error) {
                 document.getElementById('loading').innerHTML = 'Error loading data: ' + error;
@@ -783,6 +797,7 @@
                         price: [],
                         validatorLiquidationsUSD: 0,
                         nominatorLiquidationsUSD: 0,
+                        treasurySpendingUSD: 0,
                         hasLiquidationData: false
                     };
                 }
@@ -792,6 +807,8 @@
                 // Sum up all daily liquidation USD values for the month
                 months[monthKey].validatorLiquidationsUSD += row['Validator Liquidations USD'] || 0;
                 months[monthKey].nominatorLiquidationsUSD += row['Nominator Liquidations USD'] || 0;
+                // Add treasury spending (both DOT in USD and stables)
+                months[monthKey].treasurySpendingUSD += (row['USD Value'] || 0) + (row['Opengov stables spend'] || 0);
                 if (row['Validator Liquidations USD'] || row['Nominator Liquidations USD']) {
                     months[monthKey].hasLiquidationData = true;
                 }
@@ -806,10 +823,11 @@
                 labels: monthsWithData,
                 prices: monthsWithData.map(m => months[m].price.reduce((a, b) => a + b, 0) / months[m].price.length),
                 validatorLiquidationsUSD: monthsWithData.map(m => months[m].validatorLiquidationsUSD),
-                nominatorLiquidationsUSD: monthsWithData.map(m => months[m].nominatorLiquidationsUSD)
+                nominatorLiquidationsUSD: monthsWithData.map(m => months[m].nominatorLiquidationsUSD),
+                treasurySpendingUSD: monthsWithData.map(m => months[m].treasurySpendingUSD)
             };
             
-            new Chart(ctx, {
+            liquidationsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: chartData.labels,
@@ -829,14 +847,21 @@
                         data: chartData.validatorLiquidationsUSD,
                         backgroundColor: 'rgba(255, 107, 107, 0.7)',
                         yAxisID: 'y1',
-                        stack: 'liquidations'
+                        stack: 'spending'
                     }, {
                         type: 'bar',
                         label: 'Nominator Liquidations (USD)',
                         data: chartData.nominatorLiquidationsUSD,
                         backgroundColor: 'rgba(78, 205, 196, 0.7)',
                         yAxisID: 'y1',
-                        stack: 'liquidations'
+                        stack: 'spending'
+                    }, {
+                        type: 'bar',
+                        label: 'Treasury Spending (USD)',
+                        data: chartData.treasurySpendingUSD,
+                        backgroundColor: 'rgba(255, 215, 0, 0.7)',
+                        yAxisID: 'y1',
+                        stack: 'spending'
                     }]
                 },
                 options: {
@@ -871,7 +896,7 @@
                             stacked: true,
                             title: {
                                 display: true,
-                                text: 'Liquidation Value (USD)'
+                                text: 'Monthly USD Value'
                             },
                             grid: {
                                 drawOnChartArea: false,
