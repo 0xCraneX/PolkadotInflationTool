@@ -156,6 +156,11 @@
                 <canvas id="monthlyDistributionNormalizedChart"></canvas>
             </div>
             
+            <div class="chart-title">Staking Reward Liquidations vs DOT Price</div>
+            <div class="chart-container">
+                <canvas id="liquidationsChart"></canvas>
+            </div>
+            
             <div class="chart-title" style="margin-top: 40px;">Treasury Revenue Metrics</div>
             <div class="stats-row">
                 <div class="stat">
@@ -197,6 +202,8 @@
                             <th onclick="sortTable(5)">Stables Spent</th>
                             <th onclick="sortTable(6)">Validator Rewards</th>
                             <th onclick="sortTable(7)">Nominator Rewards</th>
+                            <th onclick="sortTable(8)">Validator Liquidations</th>
+                            <th onclick="sortTable(9)">Nominator Liquidations</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -243,6 +250,7 @@
             createSpendingBreakdownChart(data);
             createMonthlyDistributionChart(data);
             createMonthlyDistributionNormalizedChart(data);
+            createLiquidationsChart(data);
             
             // Populate table
             populateTable(data);
@@ -742,6 +750,142 @@
             });
         }
 
+        function createLiquidationsChart(data) {
+            const ctx = document.getElementById('liquidationsChart').getContext('2d');
+            
+            // Aggregate liquidation data by month
+            const months = {};
+            
+            data.forEach(row => {
+                const date = new Date(row.Date);
+                const monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                
+                if (!months[monthKey]) {
+                    months[monthKey] = {
+                        price: [],
+                        validatorLiquidations: 0,
+                        nominatorLiquidations: 0,
+                        hasLiquidationData: false
+                    };
+                }
+                
+                months[monthKey].price.push(row.Price || 0);
+                
+                // Only use the first occurrence of liquidation data for each month
+                if (!months[monthKey].hasLiquidationData && (row['Validator Liquidations'] || row['Nominator Liquidations'])) {
+                    months[monthKey].validatorLiquidations = row['Validator Liquidations'] || 0;
+                    months[monthKey].nominatorLiquidations = row['Nominator Liquidations'] || 0;
+                    months[monthKey].hasLiquidationData = true;
+                }
+            });
+            
+            const sortedMonths = Object.keys(months).sort();
+            
+            // Filter to only months with liquidation data
+            const monthsWithData = sortedMonths.filter(m => months[m].hasLiquidationData);
+            
+            const chartData = {
+                labels: monthsWithData,
+                prices: monthsWithData.map(m => months[m].price.reduce((a, b) => a + b, 0) / months[m].price.length),
+                validatorLiquidations: monthsWithData.map(m => months[m].validatorLiquidations),
+                nominatorLiquidations: monthsWithData.map(m => months[m].nominatorLiquidations)
+            };
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        type: 'line',
+                        label: 'DOT Price',
+                        data: chartData.prices,
+                        borderColor: '#E6007A',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y',
+                        tension: 0.1,
+                        borderWidth: 3,
+                        pointRadius: 4
+                    }, {
+                        type: 'bar',
+                        label: 'Validator Liquidations',
+                        data: chartData.validatorLiquidations,
+                        backgroundColor: 'rgba(255, 107, 107, 0.7)',
+                        yAxisID: 'y1',
+                        stack: 'liquidations'
+                    }, {
+                        type: 'bar',
+                        label: 'Nominator Liquidations',
+                        data: chartData.nominatorLiquidations,
+                        backgroundColor: 'rgba(78, 205, 196, 0.7)',
+                        yAxisID: 'y1',
+                        stack: 'liquidations'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'DOT Price (USD)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Liquidated DOT'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1e6) {
+                                        return (value / 1e6).toFixed(1) + 'M';
+                                    }
+                                    return (value / 1e3).toFixed(0) + 'K';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label;
+                                    if (label === 'DOT Price') {
+                                        return label + ': $' + context.parsed.y.toFixed(2);
+                                    } else {
+                                        return label + ': ' + formatNumber(context.parsed.y) + ' DOT';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function populateTable(data) {
             const tbody = document.getElementById('tableBody');
             const displayData = data.slice().reverse(); // Show all entries, newest first
@@ -757,6 +901,8 @@
                     <td>$${formatNumber(row['Opengov stables spend'] || 0)}</td>
                     <td>$${formatNumber(row['Dollar Value Validators'] || 0)}</td>
                     <td>$${formatNumber(row['Dollar Value Nominators'] || 0)}</td>
+                    <td>${row['Validator Liquidations'] ? formatNumber(row['Validator Liquidations']) : '-'}</td>
+                    <td>${row['Nominator Liquidations'] ? formatNumber(row['Nominator Liquidations']) : '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
