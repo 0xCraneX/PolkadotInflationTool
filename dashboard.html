@@ -270,17 +270,10 @@
             const totalInflationUSD = data.reduce((sum, row) => sum + (row['Dollar value infflation'] || 0), 0);
             const totalGovDOTUSD = data.reduce((sum, row) => sum + (row['USD Value'] || 0), 0);
             
-            // Calculate liquidations correctly - only count each month once
-            const monthlyLiquidations = {};
-            data.forEach(row => {
-                if (row['Total Liquidations USD'] && row['Total Liquidations USD'] > 0) {
-                    const monthKey = row.Date.substring(0, 7); // YYYY-MM
-                    if (!monthlyLiquidations[monthKey]) {
-                        monthlyLiquidations[monthKey] = row['Total Liquidations USD'];
-                    }
-                }
-            });
-            const totalLiquidationsUSD = Object.values(monthlyLiquidations).reduce((sum, val) => sum + val, 0);
+            // Calculate total liquidations - sum all daily USD values
+            const totalLiquidationsUSD = data.reduce((sum, row) => {
+                return sum + (row['Validator Liquidations USD'] || 0) + (row['Nominator Liquidations USD'] || 0);
+            }, 0);
             
             return {
                 currentSupply: (latestData.issuance / 1e9).toFixed(2) + 'B',
@@ -796,10 +789,10 @@
                 
                 months[monthKey].price.push(row.Price || 0);
                 
-                // Only use the first occurrence of liquidation data for each month
-                if (!months[monthKey].hasLiquidationData && (row['Validator Liquidations USD'] || row['Nominator Liquidations USD'])) {
-                    months[monthKey].validatorLiquidationsUSD = row['Validator Liquidations USD'] || 0;
-                    months[monthKey].nominatorLiquidationsUSD = row['Nominator Liquidations USD'] || 0;
+                // Sum up all daily liquidation USD values for the month
+                months[monthKey].validatorLiquidationsUSD += row['Validator Liquidations USD'] || 0;
+                months[monthKey].nominatorLiquidationsUSD += row['Nominator Liquidations USD'] || 0;
+                if (row['Validator Liquidations USD'] || row['Nominator Liquidations USD']) {
                     months[monthKey].hasLiquidationData = true;
                 }
             });
