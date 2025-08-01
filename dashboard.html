@@ -36,6 +36,13 @@
             margin-bottom: 40px;
             flex-wrap: wrap;
         }
+        .stats-row.five-items {
+            justify-content: space-evenly;
+        }
+        .stats-row.five-items .stat {
+            flex: 0 1 18%;
+            min-width: 150px;
+        }
         .stat {
             text-align: center;
             flex: 1;
@@ -202,8 +209,8 @@
                             <th onclick="sortTable(5)">Stables Spent</th>
                             <th onclick="sortTable(6)">Validator Rewards</th>
                             <th onclick="sortTable(7)">Nominator Rewards</th>
-                            <th onclick="sortTable(8)">Validator Liquidations</th>
-                            <th onclick="sortTable(9)">Nominator Liquidations</th>
+                            <th onclick="sortTable(8)">Validator Liquidations (USD)</th>
+                            <th onclick="sortTable(9)">Nominator Liquidations (USD)</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -263,11 +270,24 @@
             const totalInflationUSD = data.reduce((sum, row) => sum + (row['Dollar value infflation'] || 0), 0);
             const totalGovDOTUSD = data.reduce((sum, row) => sum + (row['USD Value'] || 0), 0);
             
+            // Calculate liquidations correctly - only count each month once
+            const monthlyLiquidations = {};
+            data.forEach(row => {
+                if (row['Total Liquidations USD'] && row['Total Liquidations USD'] > 0) {
+                    const monthKey = row.Date.substring(0, 7); // YYYY-MM
+                    if (!monthlyLiquidations[monthKey]) {
+                        monthlyLiquidations[monthKey] = row['Total Liquidations USD'];
+                    }
+                }
+            });
+            const totalLiquidationsUSD = Object.values(monthlyLiquidations).reduce((sum, val) => sum + val, 0);
+            
             return {
                 currentSupply: (latestData.issuance / 1e9).toFixed(2) + 'B',
                 govSpent: (totalGovDOT / 1e6).toFixed(1) + 'M DOT + ' + (totalGovStables / 1e6).toFixed(1) + 'M USDC/T',
                 dotSpentUSD: '$' + (totalGovDOTUSD / 1e6).toFixed(1) + 'M',
-                totalInflation: '$' + (totalInflationUSD / 1e9).toFixed(1) + 'B'
+                totalInflation: '$' + (totalInflationUSD / 1e9).toFixed(1) + 'B',
+                liquidatedValue: '$' + (totalLiquidationsUSD / 1e9).toFixed(1) + 'B'
             };
         }
 
@@ -289,8 +309,13 @@
                     <div class="stat-value">${stats.totalInflation}</div>
                     <div class="stat-label">Total Inflation Distributed</div>
                 </div>
+                <div class="stat">
+                    <div class="stat-value">${stats.liquidatedValue}</div>
+                    <div class="stat-label">Staking Rewards Liquidated</div>
+                </div>
             `;
             document.getElementById('stats').innerHTML = statsHtml;
+            document.getElementById('stats').classList.add('five-items');
         }
 
         function createPriceSpendingChart(data) {
@@ -763,8 +788,8 @@
                 if (!months[monthKey]) {
                     months[monthKey] = {
                         price: [],
-                        validatorLiquidations: 0,
-                        nominatorLiquidations: 0,
+                        validatorLiquidationsUSD: 0,
+                        nominatorLiquidationsUSD: 0,
                         hasLiquidationData: false
                     };
                 }
@@ -772,9 +797,9 @@
                 months[monthKey].price.push(row.Price || 0);
                 
                 // Only use the first occurrence of liquidation data for each month
-                if (!months[monthKey].hasLiquidationData && (row['Validator Liquidations'] || row['Nominator Liquidations'])) {
-                    months[monthKey].validatorLiquidations = row['Validator Liquidations'] || 0;
-                    months[monthKey].nominatorLiquidations = row['Nominator Liquidations'] || 0;
+                if (!months[monthKey].hasLiquidationData && (row['Validator Liquidations USD'] || row['Nominator Liquidations USD'])) {
+                    months[monthKey].validatorLiquidationsUSD = row['Validator Liquidations USD'] || 0;
+                    months[monthKey].nominatorLiquidationsUSD = row['Nominator Liquidations USD'] || 0;
                     months[monthKey].hasLiquidationData = true;
                 }
             });
@@ -787,8 +812,8 @@
             const chartData = {
                 labels: monthsWithData,
                 prices: monthsWithData.map(m => months[m].price.reduce((a, b) => a + b, 0) / months[m].price.length),
-                validatorLiquidations: monthsWithData.map(m => months[m].validatorLiquidations),
-                nominatorLiquidations: monthsWithData.map(m => months[m].nominatorLiquidations)
+                validatorLiquidationsUSD: monthsWithData.map(m => months[m].validatorLiquidationsUSD),
+                nominatorLiquidationsUSD: monthsWithData.map(m => months[m].nominatorLiquidationsUSD)
             };
             
             new Chart(ctx, {
@@ -807,15 +832,15 @@
                         pointRadius: 4
                     }, {
                         type: 'bar',
-                        label: 'Validator Liquidations',
-                        data: chartData.validatorLiquidations,
+                        label: 'Validator Liquidations (USD)',
+                        data: chartData.validatorLiquidationsUSD,
                         backgroundColor: 'rgba(255, 107, 107, 0.7)',
                         yAxisID: 'y1',
                         stack: 'liquidations'
                     }, {
                         type: 'bar',
-                        label: 'Nominator Liquidations',
-                        data: chartData.nominatorLiquidations,
+                        label: 'Nominator Liquidations (USD)',
+                        data: chartData.nominatorLiquidationsUSD,
                         backgroundColor: 'rgba(78, 205, 196, 0.7)',
                         yAxisID: 'y1',
                         stack: 'liquidations'
@@ -853,7 +878,7 @@
                             stacked: true,
                             title: {
                                 display: true,
-                                text: 'Liquidated DOT'
+                                text: 'Liquidation Value (USD)'
                             },
                             grid: {
                                 drawOnChartArea: false,
@@ -861,9 +886,9 @@
                             ticks: {
                                 callback: function(value) {
                                     if (value >= 1e6) {
-                                        return (value / 1e6).toFixed(1) + 'M';
+                                        return '$' + (value / 1e6).toFixed(1) + 'M';
                                     }
-                                    return (value / 1e3).toFixed(0) + 'K';
+                                    return '$' + (value / 1e3).toFixed(0) + 'K';
                                 }
                             }
                         }
@@ -876,7 +901,7 @@
                                     if (label === 'DOT Price') {
                                         return label + ': $' + context.parsed.y.toFixed(2);
                                     } else {
-                                        return label + ': ' + formatNumber(context.parsed.y) + ' DOT';
+                                        return label + ': $' + formatNumber(context.parsed.y);
                                     }
                                 }
                             }
@@ -901,8 +926,8 @@
                     <td>$${formatNumber(row['Opengov stables spend'] || 0)}</td>
                     <td>$${formatNumber(row['Dollar Value Validators'] || 0)}</td>
                     <td>$${formatNumber(row['Dollar Value Nominators'] || 0)}</td>
-                    <td>${row['Validator Liquidations'] ? formatNumber(row['Validator Liquidations']) : '-'}</td>
-                    <td>${row['Nominator Liquidations'] ? formatNumber(row['Nominator Liquidations']) : '-'}</td>
+                    <td>${row['Validator Liquidations USD'] ? '$' + formatNumber(row['Validator Liquidations USD']) : '-'}</td>
+                    <td>${row['Nominator Liquidations USD'] ? '$' + formatNumber(row['Nominator Liquidations USD']) : '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
