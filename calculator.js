@@ -151,8 +151,8 @@ function calculateModel2(targetMaxSupply, reductionRate, period) {
             // Recalculate issuance at the start of each period (starting from 2026)
             if (yearsSincePeriod === 0) {
                 const remainingInflation = targetSupply - totalSupply;
-                const periodIssuance = remainingInflation * (reductionRate / 100);
-                currentYearlyIssuance = periodIssuance / period;
+                const yearlyIssuance = remainingInflation * (reductionRate / 100);
+                currentYearlyIssuance = yearlyIssuance;
             }
         }
         
