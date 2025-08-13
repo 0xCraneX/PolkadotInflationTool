@@ -1,6 +1,6 @@
 // Constants
 const INITIAL_ISSUANCE = 120000000; // 120M DOT
-const INITIAL_SUPPLY = 1450000000; // 1.45B DOT (start of 2025)
+const INITIAL_SUPPLY = 1520000000; // 1.520B DOT (start of 2025)
 const START_YEAR = 2025;
 const END_YEAR = 2052;
 const TREASURY_PERCENT = 0.15;
@@ -487,9 +487,9 @@ function updateCalculations() {
         const reductionRate = parseInt(document.getElementById('reductionRate').value);
         const period = parseInt(document.getElementById('targetPeriod').value);
         
-        // Validate target supply (1.57B minimum after 2025 issuance)
+        // Validate target supply (1.640B minimum after 2025 issuance)
         const errorDiv = document.getElementById('targetSupplyError');
-        if (targetSupplyBillions < 1.57) {
+        if (targetSupplyBillions < 1.640) {
             errorDiv.style.display = 'block';
             targetSupplyInput.classList.add('invalid');
             return;
