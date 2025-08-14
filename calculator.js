@@ -1,6 +1,7 @@
 // Constants
 const INITIAL_ISSUANCE = 120000000; // 120M DOT
-const INITIAL_SUPPLY = 1676733867; // 1,676,733,867 DOT at first step (March 14, 2026)
+const INITIAL_SUPPLY_BEFORE_2025 = 1556733867; // Supply before 2025 issuance
+const INITIAL_SUPPLY = 1676733867; // 1,676,733,867 DOT after 2025 issuance (at March 14, 2026 step)
 const START_YEAR = 2025;
 const END_YEAR = 2052;
 const TREASURY_PERCENT = 0.15;
@@ -78,8 +79,8 @@ function formatUSDCompact(num) {
 function calculateModel1(reductionStep, inflationPeriod) {
     const data = [];
     let currentIssuance = INITIAL_ISSUANCE;
-    let totalSupply = INITIAL_SUPPLY;
-    let totalSupplyFixed = INITIAL_SUPPLY; // For fixed inflation comparison
+    let totalSupply = INITIAL_SUPPLY_BEFORE_2025; // Start with supply before 2025
+    let totalSupplyFixed = INITIAL_SUPPLY_BEFORE_2025; // For fixed inflation comparison
     let yearsSinceStart = 0;
     
     for (let year = START_YEAR; year <= END_YEAR; year++) {
@@ -135,8 +136,8 @@ function calculateModel1(reductionStep, inflationPeriod) {
 // Model 2: Target Supply Model
 function calculateModel2(targetMaxSupply, reductionRate, period) {
     const data = [];
-    let totalSupply = INITIAL_SUPPLY;
-    let totalSupplyFixed = INITIAL_SUPPLY;
+    let totalSupply = INITIAL_SUPPLY_BEFORE_2025; // Start with supply before 2025
+    let totalSupplyFixed = INITIAL_SUPPLY_BEFORE_2025;
     let yearsSincePeriod = 0;
     let currentYearlyIssuance = INITIAL_ISSUANCE;
     let lockedYearlyIssuance = INITIAL_ISSUANCE;
@@ -489,9 +490,9 @@ function updateCalculations() {
         const reductionRate = parseInt(document.getElementById('reductionRate').value);
         const period = parseInt(document.getElementById('targetPeriod').value);
         
-        // Validate target supply (1.797B minimum after 2025 issuance)
+        // Validate target supply (1.677B minimum after 2025 issuance)
         const errorDiv = document.getElementById('targetSupplyError');
-        if (targetSupplyBillions < 1.797) {
+        if (targetSupplyBillions < 1.677) {
             errorDiv.style.display = 'block';
             targetSupplyInput.classList.add('invalid');
             return;
