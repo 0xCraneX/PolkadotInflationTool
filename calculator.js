@@ -1,6 +1,6 @@
 // Constants
 const INITIAL_ISSUANCE = 120000000; // 120M DOT
-const INITIAL_SUPPLY = 1520000000; // 1.520B DOT (start of 2025)
+const INITIAL_SUPPLY = 1676733867; // 1,676,733,867 DOT at first step (March 14, 2026)
 const START_YEAR = 2025;
 const END_YEAR = 2052;
 const TREASURY_PERCENT = 0.15;
@@ -139,6 +139,7 @@ function calculateModel2(targetMaxSupply, reductionRate, period) {
     let totalSupplyFixed = INITIAL_SUPPLY;
     let yearsSincePeriod = 0;
     let currentYearlyIssuance = INITIAL_ISSUANCE;
+    let lockedYearlyIssuance = INITIAL_ISSUANCE;
     
     // targetMaxSupply is already in DOT units (not millions)
     const targetSupply = targetMaxSupply;
@@ -148,10 +149,13 @@ function calculateModel2(targetMaxSupply, reductionRate, period) {
         if (year === START_YEAR) {
             currentYearlyIssuance = INITIAL_ISSUANCE;
         } else {
-            // Recalculate issuance every year (starting from 2026)
-            // Apply the reduction rate annually to the remaining inflation
-            const remainingInflation = targetSupply - totalSupply;
-            currentYearlyIssuance = remainingInflation * (reductionRate / 100);
+            // Recalculate issuance at the start of each period (starting from 2026)
+            // Lock the yearly amount for the entire period
+            if (yearsSincePeriod === 0) {
+                const remainingInflation = targetSupply - totalSupply;
+                lockedYearlyIssuance = remainingInflation * (reductionRate / 100);
+            }
+            currentYearlyIssuance = lockedYearlyIssuance;
         }
         
         // Ensure we don't exceed target supply
@@ -485,9 +489,9 @@ function updateCalculations() {
         const reductionRate = parseInt(document.getElementById('reductionRate').value);
         const period = parseInt(document.getElementById('targetPeriod').value);
         
-        // Validate target supply (1.640B minimum after 2025 issuance)
+        // Validate target supply (1.797B minimum after 2025 issuance)
         const errorDiv = document.getElementById('targetSupplyError');
-        if (targetSupplyBillions < 1.640) {
+        if (targetSupplyBillions < 1.797) {
             errorDiv.style.display = 'block';
             targetSupplyInput.classList.add('invalid');
             return;
